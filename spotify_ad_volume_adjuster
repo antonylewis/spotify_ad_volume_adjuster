@@ -1,0 +1,58 @@
+-- Spotify ads tend to be louder than the preceeding music, potentially causing hearing damage.
+-- This script reduces the volume of Spotify ads (defined as any track shorter than 31 seconds) on Macs.
+-- To use, open AppleScript editor (Applications -> Utilities) and paste this script in.
+-- Adjust the VOLUMEMULTIPLE to your comfort levels.
+-- Save the script as an 'Application' in your Applications folder.
+-- Run the new Application instead of directly running Spotify.
+
+-- Set VOLUMEMULTIPLE to a number between 0 and 1.  0.6 works well.
+set VOLUMEMULTIPLE to 0.6
+
+-- Set DEBUGMODE to true to enable logging in the AppleScript console.
+set DEBUGMODE to false
+
+set currentTrack to ""
+
+if DEBUGMODE then log "Opening Spotify..."
+do shell script "open -a \"Spotify\""
+
+if DEBUGMODE then log "Delaying 5 seconds..."
+delay 5
+
+repeat --while true
+	tell application "Spotify"
+		if player state is playing then
+			if DEBUGMODE then log "Something is playing."
+			
+			if current track is not currentTrack then
+				set currentTrack to current track
+				if DEBUGMODE then log "Current track: " & currentTrack's name
+			end if
+			
+			if DEBUGMODE then log "Current track's position: " & ((player position as integer)) & " seconds of " & ((currentTrack's duration) / 1000)
+			
+			if currentTrack's duration is less than 31000 then
+				if DEBUGMODE then log "Potential ad found."
+				
+				if DEBUGMODE then log "Setting userVol to current volume: " & (sound volume as string)
+				set userVol to sound volume
+				
+				if DEBUGMODE then log "Adjusting Ad volume by " & VOLUMEMULTIPLE
+				set sound volume to (sound volume * VOLUMEMULTIPLE)
+				if DEBUGMODE then log "sound volume now " & sound volume
+				
+				if DEBUGMODE then log "Delaying " & ((currentTrack's duration) / 1000) & " seconds"
+				delay ((currentTrack's duration) / 1000)
+				
+				log "Setting volume to userVol of " & (userVol as string)
+				set sound volume to userVol
+			end if
+		else
+			if DEBUGMODE then log "Player is stopped."
+		end if
+	end tell
+	
+	if DEBUGMODE then log "Delaying 0.5s before repeating..."
+	delay 0.5
+	
+end repeat
